@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+
+# Build outputs
+frontend/dist/
+backend/dist/
+coverage/
+
+# Logs
+*.log
+logs/
+backend/logs/
+frontend/logs/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Runtime artifacts
+*.pid
+*.seed
+*.pid.lock
+
+# Temp/cache
+tmp/
+temp/
+.cache/
+
+# Optional local DB artifacts
+*.sqlite
+*.sqlite3
+*.db

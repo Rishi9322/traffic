@@ -1,0 +1,260 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  /* Light mode overrides — toggled by adding .light class on <html> */
+  html.light {
+    color-scheme: light;
+  }
+
+  html.light body {
+    @apply bg-slate-100 text-slate-800;
+  }
+
+  html.light .glass {
+    background: rgba(255, 255, 255, 0.7) !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+    color: #1e293b;
+  }
+
+  html.light .glass-strong {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-color: rgba(0, 0, 0, 0.12) !important;
+  }
+
+  html.light aside {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  html.light aside a,
+  html.light aside span,
+  html.light aside p {
+    color: #475569;
+  }
+
+  html.light .input {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #1e293b !important;
+  }
+
+  * {
+    @apply border-navy-700;
+  }
+
+  body {
+    @apply bg-navy-900 text-navy-100 font-sans antialiased;
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-navy-800;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-navy-600 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-navy-500;
+  }
+}
+
+@layer components {
+
+  /* Glass morphism card */
+  .glass {
+    @apply bg-navy-800/60 backdrop-blur-md border border-navy-700/50 rounded-xl;
+  }
+
+  .glass-strong {
+    @apply bg-navy-800/90 backdrop-blur-xl border border-navy-700/60 rounded-xl;
+  }
+
+  /* Grid background pattern */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* Orange gradient button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-sm transition-colors disabled:opacity-50;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-navy-300 hover:text-white hover:bg-navy-700/50 font-medium text-sm transition-colors;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-navy-600 text-navy-300 hover:border-brand-500 hover:text-brand-400 font-medium text-sm transition-colors;
+  }
+
+  /* Input field */
+  .input {
+    @apply w-full px-4 py-2.5 rounded-lg bg-navy-700/50 border border-navy-600 text-navy-100 placeholder-navy-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all duration-200;
+  }
+
+  /* Stat card */
+  .stat-card {
+    @apply glass p-5 flex items-start gap-4;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+}
+
+/* ── Mapbox popup overrides ─────────────────────────────────────────────── */
+.mapboxgl-popup-content {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  padding: 0 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+  min-width: 280px;
+  max-width: 340px;
+}
+
+.mapboxgl-popup-tip {
+  border-top-color: #1e293b !important;
+  border-bottom-color: #1e293b !important;
+}
+
+.mapboxgl-popup-close-button {
+  color: #94a3b8 !important;
+  font-size: 18px !important;
+  top: 8px !important;
+  right: 8px !important;
+  line-height: 1 !important;
+  padding: 2px 6px !important;
+  border-radius: 6px !important;
+}
+
+.mapboxgl-popup-close-button:hover,
+.maplibregl-popup-close-button:hover {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+.mapboxgl-ctrl-attrib {
+  background: rgba(15, 23, 42, 0.8) !important;
+  color: #94a3b8 !important;
+}
+
+.mapboxgl-ctrl-group {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.mapboxgl-ctrl-group button {
+  background-color: #1e293b !important;
+  color: #94a3b8 !important;
+}
+
+.mapboxgl-ctrl-group button:hover {
+  background-color: #334155 !important;
+}
+
+/* Cluster marker */
+.cluster-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: white;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: transform 0.2s;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.cluster-marker:hover {
+  transform: scale(1.1);
+}
+
+/* Incident markers */
+.incident-marker {
+  cursor: pointer;
+  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.incident-marker:hover {
+  /* Use glow effect, NOT transform:scale which causes MapLibre position jump */
+  filter: brightness(1.3);
+  z-index: 10;
+}
+
+/* Animate in new markers */
+@keyframes markerPop {
+  0% {
+    transform: scale(0) translateY(-10px);
+    opacity: 0;
+  }
+
+  70% {
+    transform: scale(1.2) translateY(0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.marker-new {
+  animation: markerPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* "You are here" pulse */
+.user-location-marker {
+  width: 16px;
+  height: 16px;
+  background: #3b82f6;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  animation: pulse-location 2s infinite;
+}
+
+@keyframes pulse-location {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+
+  70% {
+    box-shadow: 0 0 0 12px rgba(59, 130, 246, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}

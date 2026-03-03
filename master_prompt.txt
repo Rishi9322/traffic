@@ -1,0 +1,1049 @@
+╔══════════════════════════════════════════════════════════════════════════════════════════╗
+║       MASTER PROMPT — OVERCROWD SOURCE TRAFFIC ALERT SYSTEM (OSTAS)                    ║
+║          Full-Stack Web App | Aligned with SRS & Project Documentation                  ║
+║                        100% Free APIs | Production-Ready                                ║
+╚══════════════════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INSTRUCTIONS TO THE AI
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You are an expert full-stack software engineer. Build the complete
+"Overcrowd Source Traffic Alert System (OSTAS)" — a real-time,
+crowd-sourced traffic monitoring and alert web application.
+
+This project is based on a formal Software Requirements Specification (SRS)
+document. Every feature, module, and database schema defined below must
+match the SRS exactly. Do not add features not mentioned in the SRS.
+Do not skip any feature that IS mentioned.
+
+Generate in this exact order:
+  1. Backend  — 100% complete, all files, fully runnable
+  2. Frontend — 100% complete, all files, fully runnable
+  3. Deployment Guide — step-by-step
+  4. README.md — full local setup + deploy guide
+
+Do NOT use placeholder comments like "// TODO" or "implement here".
+Every file must be complete and runnable as-is.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROJECT OVERVIEW (from SRS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The Overcrowd Source Traffic Alert System (OSTAS) is a smart, real-time,
+user-driven platform that leverages crowd-sourced data to generate dynamic
+alerts about traffic congestion, accidents, roadblocks, and other road
+disruptions.
+
+Unlike systems that rely on CCTV or fixed sensors, OSTAS collects data
+from commuters directly. Users report incidents, receive real-time
+notifications, and can view congestion on a live map. Admins manage reports,
+validate data, and monitor system health via a dashboard.
+
+Core Goal: Reduce non-recurring congestion (accidents, roadblocks, sudden
+jams) by providing early detection and alerts so commuters can take
+alternative routes before getting stuck.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FINALIZED TECH STACK (100% FREE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Layer              Technology
+  ─────────────────  ────────────────────────────────────────────────────────────────────
+  Frontend           React.js 18 (Vite) + Tailwind CSS v3 + React Router v6
+  Backend            Node.js 20 + Express.js 4 (ES Modules)
+  Database           Turso (SQLite, edge-native, free) + Drizzle ORM
+  Real-Time          Socket.io v4
+  Authentication     JWT (access + refresh token) + bcryptjs
+  Maps               Mapbox GL JS (free: 50,000 loads/month)
+  Image Upload       ImageKit (free: 20GB/month)
+  Validation         express-validator (backend) + react-hook-form + Zod (frontend)
+  Rate Limiting      express-rate-limit (per-route)
+  Security           Helmet.js + CORS whitelist + express-mongo-sanitize
+  Logging            Winston + Morgan
+  Scheduling         node-cron (auto-expire stale reports)
+  Backend Deploy     Render (free tier)
+  Frontend Deploy    Vercel (free tier)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SRS-DEFINED MODULES (implement ALL five, exactly as specified)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The SRS defines exactly five functional modules. Every screen, API route,
+and database operation must map to one of these five modules.
+
+──────────────────────────────────────────────────────────────
+MODULE 1: USER REGISTRATION AND AUTHENTICATION MODULE
+──────────────────────────────────────────────────────────────
+Purpose (from SRS):
+  Securely register and authenticate users before they can contribute
+  traffic data or access alerts.
+
+Required Features (implement ALL):
+  - User signup with email + password
+  - Password encryption using bcryptjs (never store plain text)
+  - Login / logout functionality
+  - Role-based access control: two roles only — 'user' and 'admin'
+  - JWT-based session management:
+      Access token: 15 min expiry, stored in React state (memory)
+      Refresh token: 7 days expiry, stored in httpOnly cookie
+  - Auto-refresh: Axios interceptor silently calls /auth/refresh on 401
+  - Protected routes: unauthenticated users redirected to /login
+  - Admin routes: non-admin users redirected to /dashboard
+  - Profile management: users can update their name and email
+  - Password change: requires current password for verification
+  - Logout clears cookie and invalidates refresh token in DB
+
+SRS Functional Requirements covered:
+  FR1.1 — Register, login, logout, profile update
+  FR1.2 — Secure authentication
+  FR1.3 — Role-based access (user / admin)
+
+──────────────────────────────────────────────────────────────
+MODULE 2: TRAFFIC REPORTING MODULE
+──────────────────────────────────────────────────────────────
+Purpose (from SRS):
+  Allow users to report real-time traffic conditions including congestion,
+  accidents, and roadblocks via a simple form or map-based interface.
+
+Required Features (implement ALL):
+  - Report form with these exact fields:
+      Location: GPS auto-detect OR click on map to pin location
+      Incident Type dropdown:
+        - Accident
+        - Traffic Congestion (Jam)
+        - Roadblock
+        - Waterlogging
+        - Other
+      Congestion Level: Light / Medium / Heavy
+      Description: text field (min 10, max 500 characters, live counter)
+      Image: optional upload (JPEG/PNG/WEBP, max 5MB) via ImageKit
+      Timestamp: auto-captured at submission (not entered by user)
+      GPS coordinates: auto-captured from device location
+  - After submission:
+      Store report in Turso DB with full metadata
+      Upload image to ImageKit (if provided), store returned URL in DB
+      Emit Socket.io 'newReport' event to all connected clients
+      Map updates in real-time for all users — no page refresh needed
+  - Duplicate filtering:
+      If same user submits a report of same type at same location
+      within 5 minutes, reject with message "Report already submitted"
+  - Auto-expiry:
+      node-cron job runs every 15 minutes
+      Reports older than REPORT_EXPIRY_HOURS (default: 6h) are marked 'expired'
+      Socket.io emits 'reportExpired' for each expired report
+  - Users can edit their own reports (type, description) before expiry
+  - Users can delete their own reports (also deletes image from ImageKit)
+
+SRS Functional Requirements covered:
+  FR2.1 — Submit traffic reports (type, location, congestion level)
+  FR2.2 — Attach GPS location and timestamp automatically
+  FR2.3 — Optional photo upload
+  FR2.4 — Real-time update propagation to other users
+
+──────────────────────────────────────────────────────────────
+MODULE 3: TRAFFIC ALERT AND NOTIFICATION MODULE
+──────────────────────────────────────────────────────────────
+Purpose (from SRS):
+  Notify users in real-time about current traffic conditions near them
+  to help them plan routes and avoid congestion.
+
+Required Features (implement ALL):
+  - Real-time in-app toast notifications when a new report is submitted
+    near the user's current location (within 5 km radius)
+  - Toast shows: incident type, location name, congestion level, time
+  - Notification bell icon in navbar:
+      Shows count of new alerts since user last viewed
+      Clicking opens a dropdown list of recent alerts
+      Mark all as read button clears the count
+  - All Socket.io events that trigger UI updates:
+      'newReport'       → add marker to map + toast if within 5km
+      'reportResolved'  → update marker/status on map, show toast
+      'reportExpired'   → remove marker from map silently
+      'reportDeleted'   → remove marker from map
+  - Alert persistence: alerts stored in a frontend Zustand store
+    so they survive between page navigations within the session
+  - Route suggestion: after viewing a report on the map, a button
+    "Get Directions Around This" opens Mapbox directions in a new tab
+    (using Mapbox Directions API free tier)
+
+SRS Functional Requirements covered:
+  FR3.1 — Real-time notifications about congestion on user routes
+  FR3.2 — Alternative route suggestions (via Mapbox directions link)
+  FR3.3 — Location-based filtering of alerts (5km radius)
+
+──────────────────────────────────────────────────────────────
+MODULE 4: MAP VISUALIZATION MODULE
+──────────────────────────────────────────────────────────────
+Purpose (from SRS):
+  Display traffic data on an interactive map with color-coded indicators
+  for congestion levels, so users can visually understand road conditions.
+
+Required Features (implement ALL):
+  - Mapbox GL JS map, full-screen as the main dashboard view
+  - Map style:
+      Light theme:  mapbox://styles/mapbox/streets-v12
+      Dark theme:   mapbox://styles/mapbox/dark-v11
+      (follows app dark/light mode toggle)
+  - On map load:
+      Request user's geolocation via browser Geolocation API
+      Fly map to user's location at zoom level 13
+      Show a "You are here" marker at user location
+  - Traffic density layer:
+      Toggle button: "Show Traffic" / "Hide Traffic"
+      Uses Mapbox built-in traffic source (mapbox.mapbox-traffic-v1)
+  - All active reports displayed as color-coded markers:
+      Accident          → Red     (#EF4444)
+      Traffic Congestion→ Orange  (#F97316)
+      Roadblock         → Yellow  (#EAB308)
+      Waterlogging      → Blue    (#3B82F6)
+      Other             → Gray    (#6B7280)
+  - Congestion level also reflected in marker size:
+      Heavy → large marker, Medium → medium, Light → small
+  - Clicking a marker opens a Mapbox Popup showing:
+      Incident type badge (colored)
+      Congestion level badge
+      Description text
+      Uploaded image thumbnail (if available)
+      Reporter username (or "Anonymous")
+      Time ago (e.g., "15 minutes ago")
+      Status badge: Active / Resolved / Expired
+      Upvote count + Upvote button (logged-in users only)
+      "Mark as Resolved" button (visible to report author and admins)
+      "Get Directions Around This" button (opens Mapbox directions)
+  - Marker clustering:
+      Mapbox GL JS built-in clustering (clusterMaxZoom: 14)
+      Cluster bubble color by count:
+        <10 reports  → green  (#22C55E)
+        <30 reports  → yellow (#EAB308)
+        ≥30 reports  → red    (#EF4444)
+      Click cluster → fly to cluster bounds and zoom in
+  - Heatmap toggle:
+      Button: "Heatmap" / "Markers" — toggles between views
+      Heatmap uses report coordinates weighted by upvote count
+      Uses Mapbox heatmap layer
+  - Report location picker mode:
+      When user opens the Report Form, map enters crosshair cursor mode
+      User clicks anywhere on map to set report location
+      A preview pin drops at click location with lat/lng shown in form
+      Clicking "Use My Location" auto-fills from Geolocation API
+  - Map controls: zoom in/out, compass reset, fullscreen, geolocate button
+
+SRS Functional Requirements covered:
+  FR4.1 — Interactive map showing traffic density and incidents
+  FR4.2 — Color-coded congestion levels
+  FR4.3 — Show alerts, accidents, and recommended routes
+  FR4.4 — Real-time map updates without page refresh
+
+──────────────────────────────────────────────────────────────
+MODULE 5: ADMIN AND MONITORING MODULE
+──────────────────────────────────────────────────────────────
+Purpose (from SRS):
+  Allow administrators to monitor traffic reports, manage users, validate
+  data, remove false reports, and maintain system health.
+
+Required Features (implement ALL):
+  Admin Panel is a separate page /admin, accessible only to role='admin'.
+  It has 4 tabs:
+
+  TAB 1 — OVERVIEW (Dashboard)
+    Four stat cards:
+      Total Reports (all time)
+      Active Reports (status = 'active')
+      Resolved Today (status = 'resolved', updated today)
+      Active Users (logged in within last 24 hours)
+    AreaChart (recharts): reports submitted per day for last 7 days,
+      broken down by incident type (one line per type)
+    PieChart (recharts): distribution of report types (% of each)
+
+  TAB 2 — REPORTS MANAGEMENT
+    Searchable table (search by description or location name)
+    Filterable by: status dropdown, incident type dropdown
+    Sortable columns: Date Submitted, Type, Congestion Level,
+      Status, Upvotes
+    Per-row actions:
+      View on Map (centers map on that report's location)
+      Mark Resolved
+      Delete Report (also removes image from ImageKit)
+      Flag as Fake (sets status = 'flagged')
+    Bulk select checkboxes + "Delete Selected" button
+    Confirmation dialog before any delete or flag action
+
+  TAB 3 — USER MANAGEMENT
+    Searchable table (search by username or email)
+    Columns: Username, Email, Role, Reports Submitted, Banned Status,
+      Joined Date
+    Per-row actions:
+      Ban User (sets isBanned = true, prevents login)
+      Unban User
+      Promote to Admin (changes role to 'admin')
+      View User's Reports (filters Tab 2 by that user)
+    Confirmation dialog before ban or promote actions
+
+  TAB 4 — SYSTEM LOGS
+    Paginated table of all admin actions (AdminLogs table)
+    Columns: Admin Name, Action Performed, Target (user/report ID),
+      Details, Date & Time
+    Every admin action (delete, ban, flag, promote, resolve) is
+    recorded automatically in the AdminLogs table
+
+  FEEDBACK SUB-SECTION (below the tabs):
+    Table of all Contact Us form submissions
+    Columns: Name, Email, Message (truncated, click to expand),
+      Received At, Read Status
+    Mark as Read button per row
+    Full message view in a modal on click
+
+SRS Functional Requirements covered:
+  FR5.1 — Admin dashboard with monitoring and analytics
+  FR5.2 — Validate and remove false/spam reports
+  FR5.3 — Manage users (ban, promote)
+  FR5.4 — System logs and analytics
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NON-FUNCTIONAL REQUIREMENTS (from SRS — implement all)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+NFR1 — PERFORMANCE
+  Alert delivery: Socket.io events must reach connected clients in <3 seconds
+  API responses: all non-image endpoints must respond in <2 seconds
+  Image uploads processed asynchronously (non-blocking)
+
+NFR2 — SCALABILITY
+  Cloud-based Turso DB + Render backend handles up to 10,000 concurrent users
+  DB indexes on: location (lat+lng), status, type, created_at, author_id
+
+NFR3 — SECURITY
+  All API traffic over HTTPS in production
+  Passwords hashed with bcryptjs (salt rounds: 12)
+  JWT access token in memory only (never localStorage)
+  Refresh token in httpOnly cookie (XSS-proof)
+  Helmet.js for secure HTTP headers
+  Rate limiting:
+    /auth routes:    5 requests per 15 minutes per IP
+    /reports routes: 20 requests per minute per IP
+    /votes routes:   30 requests per minute per IP
+    Global fallback: 100 requests per minute per IP
+  Input validation on all POST/PATCH endpoints via express-validator
+  File upload: MIME type whitelist (image/jpeg, image/png, image/webp)
+  File size limit: 5MB
+  CORS: only allow CLIENT_ORIGIN from .env
+
+NFR4 — AVAILABILITY
+  Target uptime: 99% (Render free tier may have cold starts — document this)
+
+NFR5 — USABILITY
+  Clean, intuitive interface — non-technical users must be able to
+  submit a report within 3 taps/clicks
+  Mobile responsive: works at 375px, 768px, 1440px breakpoints
+  Dark/light mode toggle (class-based Tailwind, persisted in localStorage)
+  Loading spinners on all async operations
+  Empty states when no data (e.g., no reports in this area)
+  Error messages shown inline next to form fields
+  Confirmation dialogs before all destructive actions
+
+NFR6 — MAINTAINABILITY
+  Modular code: routes → controllers → services → db (strict separation)
+  ES Modules throughout (type: "module" in package.json)
+  No hardcoded values — all via .env variables
+  Consistent naming: camelCase JS, kebab-case filenames
+  Inline comments on all non-obvious logic
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DATABASE SCHEMA (Turso SQLite via Drizzle ORM)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Directly derived from the SRS ER Model and Database Schema sections.
+Five tables. Generate the full Drizzle schema AND the raw SQL CREATE
+TABLE statements (used in db/index.js initDB() for production first-run).
+
+TABLE 1: users
+  (Derived from SRS Entity: User — UserID, Name, Email, Password, Role)
+  id              TEXT  PRIMARY KEY          (crypto.randomUUID())
+  username        TEXT  NOT NULL UNIQUE
+  email           TEXT  NOT NULL UNIQUE
+  password_hash   TEXT  NOT NULL             (bcryptjs hash, never plain text)
+  role            TEXT  NOT NULL DEFAULT 'user'   ('user' | 'admin')
+  is_banned       INT   DEFAULT 0            (0=false, 1=true)
+  last_active_at  TEXT                       (updated on every login)
+  refresh_token   TEXT                       (hashed with bcrypt before storage)
+  reports_count   INT   DEFAULT 0            (incremented on report submit)
+  created_at      TEXT  DEFAULT datetime('now')
+  updated_at      TEXT  DEFAULT datetime('now')
+  INDEXES: email (unique), username (unique)
+
+TABLE 2: reports
+  (Derived from SRS Entity: Report — ReportID, UserID, Location, Type, Timestamp, Status)
+  id              TEXT  PRIMARY KEY
+  author_id       TEXT  REFERENCES users(id) ON DELETE CASCADE
+  type            TEXT  NOT NULL
+                        ('accident'|'congestion'|'roadblock'|'waterlogging'|'other')
+  congestion_level TEXT NOT NULL DEFAULT 'medium'  ('light'|'medium'|'heavy')
+  description     TEXT  NOT NULL                   (10–500 chars)
+  image_url       TEXT                             (ImageKit CDN URL)
+  image_file_id   TEXT                             (ImageKit file ID for deletion)
+  latitude        REAL  NOT NULL
+  longitude       REAL  NOT NULL
+  location_name   TEXT                             (human-readable address string)
+  status          TEXT  NOT NULL DEFAULT 'active'
+                        ('active'|'resolved'|'expired'|'flagged')
+  upvotes         INT   DEFAULT 0
+  is_anonymous    INT   DEFAULT 0
+  expires_at      TEXT                             (created_at + REPORT_EXPIRY_HOURS)
+  created_at      TEXT  DEFAULT datetime('now')
+  updated_at      TEXT  DEFAULT datetime('now')
+  INDEXES: status, type, author_id, created_at, (latitude+longitude) composite
+
+TABLE 3: alerts
+  (Derived from SRS Entity: Alert — AlertID, ReportID, UserID, Message, Timestamp)
+  Note: In this web implementation, alerts are delivered in real-time via
+  Socket.io. This table acts as a persistent log so users can see past alerts.
+  id              TEXT  PRIMARY KEY
+  report_id       TEXT  REFERENCES reports(id) ON DELETE CASCADE
+  message         TEXT  NOT NULL             (e.g. "Heavy congestion reported near Andheri")
+  alert_type      TEXT  NOT NULL             (matches report type for icon display)
+  latitude        REAL  NOT NULL             (copied from report for geo-filtering)
+  longitude       REAL  NOT NULL
+  created_at      TEXT  DEFAULT datetime('now')
+  INDEX: report_id, created_at
+
+TABLE 4: feedback
+  (Derived from SRS: Contact Us / Admin monitoring of user messages)
+  id              TEXT  PRIMARY KEY
+  name            TEXT  NOT NULL
+  email           TEXT  NOT NULL
+  message         TEXT  NOT NULL
+  is_read         INT   DEFAULT 0
+  created_at      TEXT  DEFAULT datetime('now')
+
+TABLE 5: admin_logs
+  (Derived from SRS FR5.4: System logs for admin action monitoring)
+  id              TEXT  PRIMARY KEY
+  admin_id        TEXT  REFERENCES users(id) ON DELETE SET NULL
+  action          TEXT  NOT NULL
+                        ('DELETE_REPORT'|'FLAG_REPORT'|'RESOLVE_REPORT'|
+                         'BAN_USER'|'UNBAN_USER'|'PROMOTE_USER'|'DELETE_USER')
+  target_id       TEXT                       (ID of affected report or user)
+  target_model    TEXT                       ('Report' | 'User')
+  details         TEXT                       (JSON string with extra context)
+  created_at      TEXT  DEFAULT datetime('now')
+  INDEX: admin_id, created_at
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPLETE REST API REFERENCE (/api/v1/)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+MODULE 1 — AUTH (/api/v1/auth)
+  POST   /register
+    Body: { username, email, password, confirmPassword }
+    Returns: { user: {id,username,email,role}, accessToken }
+    Sets httpOnly refresh cookie
+    Validation: email format, password min 8 chars + 1 uppercase + 1 number
+
+  POST   /login
+    Body: { email, password }
+    Returns: { user, accessToken }
+    Sets httpOnly refresh cookie
+    Checks isBanned — if true, return 403 "Account banned"
+    Updates last_active_at on successful login
+
+  POST   /logout
+    Clears refresh cookie, nullifies refresh_token in DB
+
+  POST   /refresh
+    Reads httpOnly refresh cookie
+    Returns new { accessToken }
+
+  GET    /me          (auth required)
+    Returns current user profile (no passwordHash)
+
+  PATCH  /me          (auth required)
+    Body: { username?, email? }
+    Updates profile
+
+  PATCH  /me/password (auth required)
+    Body: { currentPassword, newPassword }
+    Validates currentPassword before changing
+
+MODULE 2 — REPORTS (/api/v1/reports)
+  GET    /
+    Query params: lat, lng, radius (km, default 10), type, status, page, limit
+    Returns paginated reports within bounding box (lat±radius, lng±radius)
+    Default: returns all active reports if no lat/lng given
+
+  POST   /           (auth required)
+    Multipart form: type, congestionLevel, description, latitude, longitude,
+                    locationName, isAnonymous, image (file, optional)
+    Validates: no duplicate within 5 min for same user+type+location
+    Uploads image to ImageKit if provided
+    Emits: socket 'newReport' to all clients
+    Creates matching Alert record in alerts table
+    Increments user.reports_count
+
+  GET    /:id
+    Returns single report by ID with author info
+
+  PATCH  /:id        (auth: author or admin)
+    Body: { type?, congestionLevel?, description? }
+    Only editable before expiry
+
+  DELETE /:id        (auth: author or admin)
+    Deletes image from ImageKit (using image_file_id)
+    Decrements user.reports_count
+    Emits: socket 'reportDeleted'
+
+  PATCH  /:id/resolve  (auth: author or admin)
+    Sets status = 'resolved', updated_at = now
+    Emits: socket 'reportResolved'
+
+MODULE 3 — VOTES (upvotes on reports) (/api/v1/reports/:id/upvote)
+  POST   /api/v1/reports/:id/upvote   (auth required)
+    Toggles upvote: if already upvoted → remove upvote (decrement)
+                     if not upvoted → add upvote (increment)
+    Updates upvotes count on report record
+    Emits: socket 'voteUpdate' with { reportId, upvotes }
+    One upvote per user per report (enforced in DB and controller)
+
+MODULE 4 — ALERTS (/api/v1/alerts)
+  GET    /           (auth required)
+    Returns recent alerts ordered by created_at DESC
+    Query: lat, lng, radius — filters alerts near user location
+    Used to populate notification bell dropdown
+
+MODULE 5 — ADMIN (/api/v1/admin) — all routes require role='admin'
+  GET    /reports
+    Query: status, type, page, limit, search (description/locationName)
+    Returns ALL reports regardless of status (for admin overview)
+
+  DELETE /reports/:id
+    Hard delete + ImageKit image removal
+
+  PATCH  /reports/:id/flag
+    Sets status = 'flagged'
+    Logs action in admin_logs
+
+  PATCH  /reports/:id/resolve
+    Sets status = 'resolved'
+    Logs action in admin_logs
+
+  GET    /users
+    Query: search (username/email), page, limit
+    Returns all users
+
+  PATCH  /users/:id/ban
+    Toggles is_banned (ban if false, unban if true)
+    Logs action in admin_logs
+
+  PATCH  /users/:id/promote
+    Sets role = 'admin'
+    Logs action in admin_logs
+
+  GET    /stats
+    Returns:
+      totalReports (all time)
+      activeReports (status='active')
+      resolvedToday (resolved + updated today)
+      activeUsers24h (last_active_at within 24 hours)
+      reportsByType: [ {type, count} ] for PieChart
+      reportsLast7Days: [ {date, accident, congestion, roadblock, waterlogging, other} ]
+        for AreaChart (one entry per day for past 7 days)
+
+  GET    /logs
+    Returns paginated admin_logs with admin username joined
+    Query: page, limit
+
+  GET    /feedback
+    Returns all feedback entries ordered by created_at DESC
+
+  PATCH  /feedback/:id/read
+    Sets is_read = 1
+
+FEEDBACK (/api/v1/feedback)
+  POST   /
+    Body: { name, email, message }
+    Validation: name required, valid email, message min 10 chars
+    Stores in feedback table
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REAL-TIME SOCKET.IO ARCHITECTURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SERVER (config/socket.js):
+  Attach Socket.io to Express HTTP server
+  CORS: allow CLIENT_ORIGIN from .env
+  On connection: log user socket ID
+  Expose io instance for use in controllers via notificationService.js
+
+SERVER EMITS (via notificationService.js):
+  'newReport'       Payload: { report: fullReportObject }
+                    Triggered: after POST /reports saves to DB
+  'reportResolved'  Payload: { reportId, status: 'resolved' }
+                    Triggered: after PATCH /reports/:id/resolve
+  'reportExpired'   Payload: { reportId, status: 'expired' }
+                    Triggered: by node-cron expiry job
+  'reportDeleted'   Payload: { reportId }
+                    Triggered: after DELETE /reports/:id
+  'voteUpdate'      Payload: { reportId, upvotes }
+                    Triggered: after POST /reports/:id/upvote
+
+FRONTEND LISTENERS (SocketContext.jsx):
+  'newReport'      → reportStore.addReport(report)
+                    If within 5km of user location: show toast notification
+  'reportResolved' → reportStore.updateReport({ id, status:'resolved' })
+                    Update marker popup to show "Resolved" badge
+  'reportExpired'  → reportStore.removeReport(id)
+                    Remove marker from map
+  'reportDeleted'  → reportStore.removeReport(id)
+                    Remove marker from map
+  'voteUpdate'     → reportStore.updateUpvotes({ reportId, upvotes })
+                    Update popup vote count live
+
+AUTO-EXPIRY JOB (jobs/expireReports.js):
+  node-cron: runs every 15 minutes ('*/15 * * * *')
+  Query: SELECT reports WHERE status='active' AND expires_at < datetime('now')
+  UPDATE status='expired' for all matching rows
+  For each expired: emit socket 'reportExpired' to all clients
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPLETE FOLDER STRUCTURE (generate EVERY file)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ostas/
+│
+├── backend/
+│   ├── config/
+│   │   ├── imagekit.js           ← ImageKit SDK init (publicKey, privateKey, urlEndpoint)
+│   │   └── socket.js             ← Socket.io attach to HTTP server, expose io instance
+│   │
+│   ├── db/
+│   │   ├── index.js              ← Turso client + Drizzle instance + initDB() with raw SQL
+│   │   └── schema.js             ← Drizzle table definitions for all 5 tables + indexes
+│   │
+│   ├── controllers/
+│   │   ├── authController.js     ← register, login, logout, refresh, getMe, updateMe,
+│   │   │                             changePassword
+│   │   ├── reportController.js   ← createReport, getReports, getReport, updateReport,
+│   │   │                             deleteReport, resolveReport
+│   │   ├── voteController.js     ← toggleUpvote
+│   │   ├── alertController.js    ← getAlerts (for notification bell)
+│   │   ├── adminController.js    ← getAdminReports, deleteReport, flagReport,
+│   │   │                             resolveReport, getUsers, banUser, promoteUser,
+│   │   │                             getStats, getLogs, getFeedback, markFeedbackRead
+│   │   └── feedbackController.js ← submitFeedback
+│   │
+│   ├── middleware/
+│   │   ├── auth.js               ← verifyToken, requireRole('admin')
+│   │   ├── upload.js             ← Multer memoryStorage + ImageKit upload helper function
+│   │   ├── validate.js           ← express-validator error extractor wrapper
+│   │   ├── rateLimiter.js        ← authLimiter, reportLimiter, voteLimiter, globalLimiter
+│   │   └── errorHandler.js       ← AppError class + centralized async error middleware
+│   │
+│   ├── routes/
+│   │   ├── auth.routes.js        ← /api/v1/auth/*
+│   │   ├── report.routes.js      ← /api/v1/reports/*
+│   │   ├── alert.routes.js       ← /api/v1/alerts/*
+│   │   ├── admin.routes.js       ← /api/v1/admin/*
+│   │   └── feedback.routes.js    ← /api/v1/feedback/*
+│   │
+│   ├── services/
+│   │   ├── reportService.js      ← calcExpiresAt(), checkDuplicate(), buildBoundingBox()
+│   │   └── notificationService.js← emit helpers: emitNewReport(), emitResolved(), etc.
+│   │
+│   ├── utils/
+│   │   ├── jwt.js                ← generateAccessToken, generateRefreshToken,
+│   │   │                             verifyAccessToken, verifyRefreshToken
+│   │   ├── logger.js             ← Winston logger
+│   │   ├── uuid.js               ← crypto.randomUUID() wrapper
+│   │   └── seed.js               ← seed: 1 admin + 3 users + 20 reports + 3 feedback
+│   │
+│   ├── validations/
+│   │   ├── authValidation.js     ← register + login + password change rules
+│   │   ├── reportValidation.js   ← create + update rules
+│   │   └── feedbackValidation.js ← contact form rules
+│   │
+│   ├── jobs/
+│   │   └── expireReports.js      ← node-cron every 15 min, expire old reports
+│   │
+│   ├── drizzle.config.js         ← Drizzle Kit config for Turso
+│   ├── server.js                 ← Express app + Socket.io + routes + start server
+│   ├── .env.example
+│   └── package.json
+│
+├── frontend/
+│   ├── public/
+│   │   └── manifest.json         ← PWA manifest
+│   │
+│   ├── src/
+│   │   ├── api/
+│   │   │   ├── axiosInstance.js  ← base URL + auth interceptor + 401 auto-refresh
+│   │   │   ├── authApi.js        ← login, register, logout, refresh, getMe,
+│   │   │   │                         updateMe, changePassword
+│   │   │   ├── reportApi.js      ← getReports, createReport, updateReport,
+│   │   │   │                         deleteReport, resolveReport, toggleUpvote
+│   │   │   ├── alertApi.js       ← getAlerts
+│   │   │   ├── adminApi.js       ← all /admin/* calls
+│   │   │   └── feedbackApi.js    ← submitFeedback
+│   │   │
+│   │   ├── components/
+│   │   │   │
+│   │   │   ├── layout/
+│   │   │   │   ├── Sidebar.jsx        ← links: Map, Report Incident, About, Help,
+│   │   │   │   │                          Contact Us, Admin Panel (admin only)
+│   │   │   │   │                          User info at bottom, dark mode toggle
+│   │   │   │   ├── Navbar.jsx         ← hamburger (mobile), notification bell with
+│   │   │   │   │                          count badge, user avatar dropdown
+│   │   │   │   └── DashboardLayout.jsx← wraps all auth pages (Sidebar + Navbar)
+│   │   │   │
+│   │   │   ├── map/                   ← Module 4: Map Visualization
+│   │   │   │   ├── TrafficMap.jsx     ← full Mapbox GL JS map with all layers,
+│   │   │   │   │                          clustering, markers, popups, controls
+│   │   │   │   ├── MarkerPopup.jsx    ← popup contents: type, level, description,
+│   │   │   │   │                          image, votes, resolve btn, directions btn
+│   │   │   │   └── HeatmapLayer.jsx   ← Mapbox heatmap layer component
+│   │   │   │
+│   │   │   ├── reports/               ← Module 2: Traffic Reporting
+│   │   │   │   ├── ReportForm.jsx     ← slide-in panel form with all fields,
+│   │   │   │   │                          map location picker integration,
+│   │   │   │   │                          image drag-drop preview, submit state
+│   │   │   │   ├── ReportCard.jsx     ← card for list view
+│   │   │   │   └── ReportList.jsx     ← scrollable recent reports sidebar panel
+│   │   │   │
+│   │   │   ├── alerts/                ← Module 3: Alert & Notification
+│   │   │   │   ├── NotificationBell.jsx  ← bell icon + count badge + dropdown list
+│   │   │   │   └── AlertItem.jsx         ← single alert row in dropdown
+│   │   │   │
+│   │   │   ├── admin/                 ← Module 5: Admin & Monitoring
+│   │   │   │   ├── AdminStats.jsx     ← 4 stat cards
+│   │   │   │   ├── AdminCharts.jsx    ← recharts AreaChart + PieChart
+│   │   │   │   ├── ReportsTable.jsx   ← sortable/filterable table + row actions
+│   │   │   │   ├── UsersTable.jsx     ← user management table + actions
+│   │   │   │   ├── AdminLogs.jsx      ← paginated logs table
+│   │   │   │   └── FeedbackTable.jsx  ← contact form submissions table
+│   │   │   │
+│   │   │   └── ui/                    ← Reusable UI primitives
+│   │   │       ├── Button.jsx         ← variants: primary, danger, ghost, outline
+│   │   │       ├── Modal.jsx          ← accessible modal + Escape key close
+│   │   │       ├── Toast.jsx          ← toast (success/error/info/warning)
+│   │   │       ├── Spinner.jsx        ← loading spinner
+│   │   │       ├── Badge.jsx          ← colored status/type badge
+│   │   │       ├── Input.jsx          ← input with label + inline error
+│   │   │       └── ConfirmDialog.jsx  ← "Are you sure?" modal for destructive actions
+│   │   │
+│   │   ├── context/
+│   │   │   ├── AuthContext.jsx        ← user state, login/logout/token management
+│   │   │   └── SocketContext.jsx      ← Socket.io client + all event listeners
+│   │   │
+│   │   ├── hooks/
+│   │   │   ├── useAuth.js             ← consume AuthContext
+│   │   │   ├── useSocket.js           ← consume SocketContext
+│   │   │   ├── useGeolocation.js      ← browser Geolocation API with error handling
+│   │   │   ├── useReports.js          ← fetch reports, expose CRUD
+│   │   │   ├── useAlerts.js           ← fetch alerts for notification bell
+│   │   │   ├── useToast.js            ← imperative toast trigger
+│   │   │   └── useDebounce.js         ← debounce hook for search inputs
+│   │   │
+│   │   ├── pages/
+│   │   │   ├── LoginPage.jsx          ← Module 1: login form
+│   │   │   ├── RegisterPage.jsx       ← Module 1: register form + password strength
+│   │   │   ├── DashboardPage.jsx      ← default: full map + report list panel
+│   │   │   ├── ReportPage.jsx         ← dedicated report submission page (mobile UX)
+│   │   │   ├── AdminPage.jsx          ← Module 5: tabbed admin panel
+│   │   │   ├── ContactPage.jsx        ← contact form (feedback)
+│   │   │   ├── AboutPage.jsx          ← about OSTAS (matches SRS introduction)
+│   │   │   ├── HelpPage.jsx           ← FAQ + how-to guide
+│   │   │   └── NotFoundPage.jsx       ← 404 page
+│   │   │
+│   │   ├── store/
+│   │   │   └── reportStore.js         ← Zustand store: reports[], addReport(),
+│   │   │                                  updateReport(), removeReport(), setReports(),
+│   │   │                                  updateUpvotes()
+│   │   │
+│   │   ├── utils/
+│   │   │   ├── mapHelpers.js          ← getMarkerColor(type), getMarkerSize(level),
+│   │   │   │                              buildHeatmapData(), calcDistance(lat1,lng1,lat2,lng2)
+│   │   │   ├── timeHelpers.js         ← formatTimeAgo(), formatDate()
+│   │   │   ├── constants.js           ← INCIDENT_TYPES, CONGESTION_LEVELS, STATUS_COLORS,
+│   │   │   │                              MARKER_COLORS, SOCKET_EVENTS, MAP_STYLES
+│   │   │   └── validators.js          ← Zod schemas for all forms
+│   │   │
+│   │   ├── App.jsx                    ← React Router routes + ProtectedRoute + AdminRoute
+│   │   ├── main.jsx                   ← root render + all context providers
+│   │   └── index.css                  ← Tailwind directives + dark mode + map overrides
+│   │
+│   ├── .env.example
+│   ├── vite.config.js                 ← Vite config + vite-plugin-pwa
+│   ├── tailwind.config.js             ← custom colors, dark mode: 'class'
+│   ├── postcss.config.js
+│   └── package.json
+│
+├── docker-compose.yml                 ← local dev setup
+└── README.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ENVIRONMENT VARIABLES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+backend/.env.example:
+  NODE_ENV=development
+  PORT=5000
+  TURSO_DATABASE_URL=libsql://your-db-name-your-org.turso.io
+  TURSO_AUTH_TOKEN=your-turso-auth-token
+  JWT_ACCESS_SECRET=<generate: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))">
+  JWT_REFRESH_SECRET=<generate same way>
+  JWT_ACCESS_EXPIRES=15m
+  JWT_REFRESH_EXPIRES=7d
+  IMAGEKIT_PUBLIC_KEY=your_imagekit_public_key
+  IMAGEKIT_PRIVATE_KEY=your_imagekit_private_key
+  IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your_imagekit_id
+  CLIENT_ORIGIN=http://localhost:5173
+  REPORT_EXPIRY_HOURS=6
+
+frontend/.env.example:
+  VITE_API_URL=http://localhost:5000/api/v1
+  VITE_SOCKET_URL=http://localhost:5000
+  VITE_MAPBOX_TOKEN=pk.your_mapbox_public_token
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SEED SCRIPT (utils/seed.js)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Generate and insert:
+  1 admin user:
+    username: "admin", email: "admin@ostas.com", password: "Admin@1234", role: "admin"
+
+  3 regular users:
+    { username:"rahul_m", email:"rahul@test.com", password:"Test@1234" }
+    { username:"priya_s", email:"priya@test.com", password:"Test@1234" }
+    { username:"amit_k",  email:"amit@test.com",  password:"Test@1234" }
+
+  20 reports spread across these Indian cities with real coordinates:
+    Mumbai (19.0760, 72.8777), Delhi (28.7041, 77.1025),
+    Bangalore (12.9716, 77.5946), Chennai (13.0827, 80.2707),
+    Hyderabad (17.3850, 78.4867)
+    Use all 5 incident types and all 3 congestion levels
+    Mix of: some with imageUrl (placeholder), some without
+    Mix of: some anonymous, some not
+    Mix of statuses: 15 active, 3 resolved, 2 expired
+
+  5 feedback entries (realistic contact form messages)
+
+  Print "✅ Seeded: [item]" for each successful insert.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SAMPLE CURL COMMANDS (include in README.md)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Register
+curl -X POST http://localhost:5000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"testuser","email":"test@test.com","password":"Test@1234","confirmPassword":"Test@1234"}'
+
+# Login
+curl -X POST http://localhost:5000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -c cookies.txt \
+  -d '{"email":"test@test.com","password":"Test@1234"}'
+
+# Submit Report (with image)
+curl -X POST http://localhost:5000/api/v1/reports \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -F "type=accident" \
+  -F "congestionLevel=heavy" \
+  -F "description=Major accident on highway near toll booth" \
+  -F "latitude=19.0760" \
+  -F "longitude=72.8777" \
+  -F "locationName=Mumbai, Maharashtra" \
+  -F "isAnonymous=false" \
+  -F "image=@/path/to/photo.jpg"
+
+# Get Active Reports Near Mumbai
+curl "http://localhost:5000/api/v1/reports?lat=19.0760&lng=72.8777&radius=10&status=active"
+
+# Upvote a Report
+curl -X POST http://localhost:5000/api/v1/reports/REPORT_ID/upvote \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+
+# Admin: Get Stats
+curl http://localhost:5000/api/v1/admin/stats \
+  -H "Authorization: Bearer ADMIN_ACCESS_TOKEN"
+
+# Submit Contact Form
+curl -X POST http://localhost:5000/api/v1/feedback \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Rahul Mehta","email":"rahul@test.com","message":"Great app, found it very useful during my commute!"}'
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DEPLOYMENT GUIDE (generate as step-by-step instructions)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 1 — Turso (Free Database)
+  1. Go to turso.tech → Sign up (free, no credit card)
+  2. Install CLI: curl -sSfL https://get.tur.so/install.sh | bash
+  3. Login: turso auth login
+  4. Create DB: turso db create ostas-db
+  5. Get URL: turso db show ostas-db --url
+  6. Get token: turso db tokens create ostas-db
+  7. Add TURSO_DATABASE_URL and TURSO_AUTH_TOKEN to backend .env
+  8. Run: cd backend && npm install && npm run db:push
+  9. Run: npm run db:seed
+
+STEP 2 — ImageKit (Free Image Upload: 20GB/month)
+  1. Go to imagekit.io → Sign up (free, no credit card)
+  2. Dashboard → Developer Options → copy Public Key, Private Key, URL Endpoint
+  3. Add all three to backend .env
+
+STEP 3 — Mapbox (Free Maps: 50,000 loads/month)
+  1. Go to mapbox.com → Sign up (free, requires email verification)
+  2. Account → Tokens → Create new token
+  3. Allowed URLs: add your Vercel domain (e.g. https://ostas.vercel.app)
+  4. Add token to frontend .env as VITE_MAPBOX_TOKEN
+
+STEP 4 — Deploy Backend to Render (Free)
+  1. Push backend/ folder to a GitHub repository
+  2. Go to render.com → New Web Service → Connect GitHub repo
+  3. Settings:
+       Root Directory: backend
+       Build Command: npm install
+       Start Command: npm start
+       Environment: Node 20
+  4. Add all backend .env variables in Render Environment tab
+  5. Deploy → Copy the Render URL (e.g. https://ostas-api.onrender.com)
+  Note: Free tier may have 50-second cold start after inactivity. This is normal.
+
+STEP 5 — Deploy Frontend to Vercel (Free)
+  1. Push frontend/ to GitHub (same or different repo)
+  2. Go to vercel.com → New Project → Import repo
+  3. Framework Preset: Vite
+  4. Root Directory: frontend
+  5. Add environment variables:
+       VITE_API_URL=https://ostas-api.onrender.com/api/v1
+       VITE_SOCKET_URL=https://ostas-api.onrender.com
+       VITE_MAPBOX_TOKEN=pk.your_mapbox_token
+  6. Deploy → Copy Vercel URL
+
+STEP 6 — Final Config Update
+  1. In Render backend env vars, update CLIENT_ORIGIN=https://your-app.vercel.app
+  2. Trigger Render redeploy (Manual Deploy button)
+  3. In Mapbox dashboard, confirm your Vercel domain is in allowed URLs
+
+STEP 7 — Verify All 5 Modules Work End-to-End
+  □ Module 1: Register new user, login, check role-based access
+  □ Module 2: Submit a report with image, confirm it saves and image appears
+  □ Module 3: Open app in 2 tabs — submit report in tab 1, see toast in tab 2
+  □ Module 4: Confirm marker appears on map, click marker to see popup
+  □ Module 5: Login as admin, check all 4 tabs load with data
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FINAL CHECKLIST — AI must produce ALL files below
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+BACKEND:
+  □ backend/package.json
+  □ backend/.env.example
+  □ backend/drizzle.config.js
+  □ backend/server.js
+  □ backend/db/index.js
+  □ backend/db/schema.js
+  □ backend/config/imagekit.js
+  □ backend/config/socket.js
+  □ backend/middleware/auth.js
+  □ backend/middleware/upload.js
+  □ backend/middleware/validate.js
+  □ backend/middleware/rateLimiter.js
+  □ backend/middleware/errorHandler.js
+  □ backend/utils/jwt.js
+  □ backend/utils/logger.js
+  □ backend/utils/uuid.js
+  □ backend/utils/seed.js
+  □ backend/validations/authValidation.js
+  □ backend/validations/reportValidation.js
+  □ backend/validations/feedbackValidation.js
+  □ backend/routes/auth.routes.js
+  □ backend/routes/report.routes.js
+  □ backend/routes/alert.routes.js
+  □ backend/routes/admin.routes.js
+  □ backend/routes/feedback.routes.js
+  □ backend/controllers/authController.js
+  □ backend/controllers/reportController.js
+  □ backend/controllers/voteController.js
+  □ backend/controllers/alertController.js
+  □ backend/controllers/adminController.js
+  □ backend/controllers/feedbackController.js
+  □ backend/services/reportService.js
+  □ backend/services/notificationService.js
+  □ backend/jobs/expireReports.js
+
+FRONTEND:
+  □ frontend/package.json
+  □ frontend/.env.example
+  □ frontend/vite.config.js
+  □ frontend/tailwind.config.js
+  □ frontend/postcss.config.js
+  □ frontend/public/manifest.json
+  □ frontend/src/main.jsx
+  □ frontend/src/App.jsx
+  □ frontend/src/index.css
+  □ frontend/src/api/axiosInstance.js
+  □ frontend/src/api/authApi.js
+  □ frontend/src/api/reportApi.js
+  □ frontend/src/api/alertApi.js
+  □ frontend/src/api/adminApi.js
+  □ frontend/src/api/feedbackApi.js
+  □ frontend/src/context/AuthContext.jsx
+  □ frontend/src/context/SocketContext.jsx
+  □ frontend/src/store/reportStore.js
+  □ frontend/src/hooks/useAuth.js
+  □ frontend/src/hooks/useSocket.js
+  □ frontend/src/hooks/useGeolocation.js
+  □ frontend/src/hooks/useReports.js
+  □ frontend/src/hooks/useAlerts.js
+  □ frontend/src/hooks/useToast.js
+  □ frontend/src/hooks/useDebounce.js
+  □ frontend/src/utils/mapHelpers.js
+  □ frontend/src/utils/timeHelpers.js
+  □ frontend/src/utils/constants.js
+  □ frontend/src/utils/validators.js
+  □ frontend/src/components/layout/Sidebar.jsx
+  □ frontend/src/components/layout/Navbar.jsx
+  □ frontend/src/components/layout/DashboardLayout.jsx
+  □ frontend/src/components/map/TrafficMap.jsx
+  □ frontend/src/components/map/MarkerPopup.jsx
+  □ frontend/src/components/map/HeatmapLayer.jsx
+  □ frontend/src/components/reports/ReportForm.jsx
+  □ frontend/src/components/reports/ReportCard.jsx
+  □ frontend/src/components/reports/ReportList.jsx
+  □ frontend/src/components/alerts/NotificationBell.jsx
+  □ frontend/src/components/alerts/AlertItem.jsx
+  □ frontend/src/components/admin/AdminStats.jsx
+  □ frontend/src/components/admin/AdminCharts.jsx
+  □ frontend/src/components/admin/ReportsTable.jsx
+  □ frontend/src/components/admin/UsersTable.jsx
+  □ frontend/src/components/admin/AdminLogs.jsx
+  □ frontend/src/components/admin/FeedbackTable.jsx
+  □ frontend/src/components/ui/Button.jsx
+  □ frontend/src/components/ui/Modal.jsx
+  □ frontend/src/components/ui/Toast.jsx
+  □ frontend/src/components/ui/Spinner.jsx
+  □ frontend/src/components/ui/Badge.jsx
+  □ frontend/src/components/ui/Input.jsx
+  □ frontend/src/components/ui/ConfirmDialog.jsx
+  □ frontend/src/pages/LoginPage.jsx
+  □ frontend/src/pages/RegisterPage.jsx
+  □ frontend/src/pages/DashboardPage.jsx
+  □ frontend/src/pages/ReportPage.jsx
+  □ frontend/src/pages/AdminPage.jsx
+  □ frontend/src/pages/ContactPage.jsx
+  □ frontend/src/pages/AboutPage.jsx
+  □ frontend/src/pages/HelpPage.jsx
+  □ frontend/src/pages/NotFoundPage.jsx
+
+ADDITIONAL:
+  □ docker-compose.yml
+  □ README.md (setup + run + deploy)
+  □ Deployment guide (Steps 1–7 above)
+  □ Sample curl commands for all endpoints
+  □ Seed script with 20 realistic Indian city reports
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BEGIN GENERATION. START WITH BACKEND. DO NOT SKIP ANY FILE.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
