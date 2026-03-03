@@ -177,3 +177,8 @@ traffic/
 3. Build command: `npm run build`
 4. Output directory: `dist`
 5. Add `VITE_API_URL`, `VITE_SOCKET_URL`, `VITE_MAPTILER_KEY` env vars
+
+### Free-tier deployment guide
+
+- See `DEPLOYMENT.md` for a complete free-only setup using Render (backend) + Vercel (frontend).
+- A Render Blueprint config is included at `render.yaml`.
