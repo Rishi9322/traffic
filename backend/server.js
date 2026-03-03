@@ -12,6 +12,7 @@ import { globalLimiter } from './middleware/rateLimiter.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { startExpireJob } from './jobs/expireReports.js';
 import { logger } from './utils/logger.js';
+import { normalizeOrigin } from './utils/origin.js';
 
 import authRoutes from './routes/auth.routes.js';
 import reportRoutes from './routes/report.routes.js';
@@ -21,6 +22,7 @@ import feedbackRoutes from './routes/feedback.routes.js';
 
 const app = express();
 const httpServer = createServer(app);
+const clientOrigin = normalizeOrigin(process.env.CLIENT_ORIGIN);
 
 // ── Initialize Socket.io ─────────────────────────────────────────────────────
 initSocket(httpServer);
@@ -28,7 +30,7 @@ initSocket(httpServer);
 // ── Security Middleware ──────────────────────────────────────────────────────
 app.use(helmet());
 app.use(cors({
-    origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+    origin: clientOrigin,
     credentials: true,
 }));
 

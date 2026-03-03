@@ -60,6 +60,7 @@ git push -u origin main
    - `VITE_API_URL=https://<render-service>.onrender.com/api/v1`
    - `VITE_SOCKET_URL=https://<render-service>.onrender.com`
    - `VITE_MAPTILER_KEY=<your-maptiler-key>`
+   - ⚠️ Never use a Render Deploy Hook URL (`https://api.render.com/deploy/...`) for `VITE_API_URL` or `VITE_SOCKET_URL`
 6. Deploy and copy the production URL
 
 ---
@@ -69,6 +70,8 @@ git push -u origin main
 Back in Render service env vars, update:
 
 - `CLIENT_ORIGIN=https://<your-vercel-app>.vercel.app`
+   - Use only the site origin (no path): `https://traffic-one-woad.vercel.app`
+   - ❌ Wrong: `https://traffic-one-woad.vercel.app/login`
 
 Then redeploy backend.
 

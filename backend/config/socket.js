@@ -1,4 +1,5 @@
 import { Server } from 'socket.io';
+import { normalizeOrigin } from '../utils/origin.js';
 
 let io;
 
@@ -7,9 +8,11 @@ let io;
  * @param {import('http').Server} httpServer
  */
 export function initSocket(httpServer) {
+    const clientOrigin = normalizeOrigin(process.env.CLIENT_ORIGIN);
+
     io = new Server(httpServer, {
         cors: {
-            origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+            origin: clientOrigin,
             methods: ['GET', 'POST'],
             credentials: true,
         },
